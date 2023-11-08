@@ -1,0 +1,8 @@
+{
+  "name": "ntu-webapp-backend",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "repository": "https://github.com/warronyiang15/ntu-webapp-backend.git",
+  "author": "Warron Yiang <65525835+warronyiang15@users.noreply.github.com>",
+  "license": "MIT"
+}
