@@ -1,14 +1,19 @@
 # Backend
 
+## Installation
+```bash
+$ yarn init
+```
+
 ## Framework
-* express
+* express & nodemon
     * Web server Framework 
 * glob
     * Match files using the patterns the shell uses.
     * Better File Structure of Project
 * prisma
     * ORM for database
-* bcrypt
+* bcrypt (not installed)
     * Password hashing for user
 * axios
     * API handler
