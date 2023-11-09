@@ -2,7 +2,20 @@
 
 ## Installation
 ```bash
-$ yarn init
+$ yarn install
+```
+
+No yarn? 
+```bash
+$ npm install -g yarn
+```
+
+No npm? go download XD
+
+## Run
+
+```bash
+$ yarn start
 ```
 
 ## Framework
@@ -13,6 +26,14 @@ $ yarn init
     * Better File Structure of Project
 * prisma
     * ORM for database
+* crypto
+    * for generating token
+* cors
+    * Enable cross-origin resource sharing
+* cookie-parser
+    * enable cookies
+* express-session
+    * enable session to achieve stateful
 * bcrypt (not installed)
     * Password hashing for user
 * axios
@@ -44,6 +65,8 @@ https://dbdiagram.io/d/654ba0a67d8bbd6465c4d66c
 
 TBD (will changes to eliminate array)
 ![](images/db.png)
+
+Model file will located at `prisma/schema.prisma`
 
 ## Class/Module Functionality
 
