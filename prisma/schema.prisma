@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users{
+  id                Int           @id @default(autoincrement())
+  username          String        @unique
+  password          String
+  permission        Int
+  collection_list   Collections[]  
+  bought_book_list  BoughtBooks[]
+  ownership_list    Ownerships[]
+  historys_list     Historys[]
+  rating_list       Rates[]
+  created_at        DateTime      @default(now())
+}
+
+model Books{
+  id                Int           @id @default(autoincrement())
+  bookname          String
+  description       String
+  age               Int
+  price             Float
+  owner             String
+  category_list     Categorys[]
+  images_list       Images[]
+  rate_list         Rates[]
+  collection_list   Collections[]  
+  bought_book_list  BoughtBooks[]
+  ownership_list    Ownerships[]
+  created_at        DateTime      @default(now())
+}
+
+model Categorys{
+  id            Int           @id @default(autoincrement())
+  book          Books         @relation(fields: [books_id], references: [id])
+  books_id      Int
+  categoryname  String
+  historys_list Historys[]
+}
+
+model Images{
+  id            Int           @id @default(autoincrement())
+  book          Books         @relation(fields: [books_id], references: [id])
+  books_id      Int
+  page          Int
+  file_path     String        @unique
+}
+
+model Historys{
+  id            Int           @id @default(autoincrement())
+  user          Users         @relation(fields: [users_id], references: [id])
+  users_id      Int
+  category      Categorys     @relation(fields: [categorys_id], references: [id])
+  categorys_id  Int
+  times         Int           @default(1)
+}
+
+model Collections{
+  id          Int           @id @default(autoincrement())
+  user        Users         @relation(fields: [users_id], references: [id])
+  users_id    Int
+  book        Books         @relation(fields: [books_id], references: [id])
+  books_id    Int
+}
+
+model BoughtBooks{
+  id          Int           @id @default(autoincrement())
+  user        Users         @relation(fields: [users_id], references: [id])
+  users_id    Int
+  book        Books         @relation(fields: [books_id], references: [id])
+  books_id    Int
+}
+
+model Ownerships{
+  id          Int           @id @default(autoincrement())
+  user        Users         @relation(fields: [users_id], references: [id])
+  users_id    Int
+  book        Books         @relation(fields: [books_id], references: [id])
+  books_id    Int
+}
+
+model Rates{
+  id          Int           @id @default(autoincrement())
+  user        Users         @relation(fields: [users_id], references: [id])
+  users_id    Int
+  book        Books         @relation(fields: [books_id], references: [id])
+  books_id    Int
+  rating      Int
+  comment     String        @default("")
+}
