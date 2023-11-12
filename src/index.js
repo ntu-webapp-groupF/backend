@@ -51,9 +51,21 @@ app.get("/", (req, res) => {
 })
 
 //TODO: initial DB can be done here
+const initDatabase = async () => {
+    try {
+        await prisma.$connect();
+        console.log("Connected to the database");
+    } catch (error) {
+        console.error("Error connecting to the database:", error);
+    }
+}
+
+initDatabase();
+
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 })
+
 process.on('exit', async () => {
     await prisma.$disconnect();
 })
