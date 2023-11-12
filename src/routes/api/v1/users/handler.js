@@ -7,7 +7,9 @@ import { prisma } from '../../../../adapters.js';
  * @param {import('express').Response} res 
 */
 export async function getAllUsers(req, res) {
-	return res.status(200).send(prisma.users.findMany());
+	const users = await prisma.users.findMany();
+	console.log(users);
+	return res.status(200).send(users);
 }
 
 export async function loginHandler(req, res) {
@@ -51,10 +53,12 @@ export async function registerHandler(req, res) {
 		return res.status(401).json({ error: "Username already registered." })
 	}
 
-	prisma.users.create({
-		username: username,
-		password: await bcrypt.hash(password, salt),
-		permission: 0	// TODO
+	const dummy = await prisma.users.create({
+		data: {
+			username: username,
+			password: await bcrypt.hash(password, salt),
+			permission: 0	// TODO
+		},
 	})
 	console.log("User register.")
 	return res.status(201).send();
