@@ -12,6 +12,12 @@ $ npm install -g yarn
 
 No npm? go download XD
 
+## Build Docker-compose
+```bash
+$ cd Docker
+$ docker-compose up -d --build
+```
+
 ## Run
 
 ```bash
@@ -54,7 +60,7 @@ $ yarn start
 
 ### Basic Architecture
 
-![](images/a.png)
+![](images/a2.png)
 
 ### Advanced Architecture (future work)
 
@@ -511,6 +517,70 @@ GET /
         <Categorys>,
         ...
     ]
+}
+```
+
+## Image Server Communications
+> Use `axios` to send API request to image server
+
+#### Get Images
+get image
+##### HTTP method
+```
+GET /image
+```
+##### HTTP Request
+```json
+{
+    "path": <string> 
+}
+```
+##### HTTP Response
+```
+image/png or image/jpg or image/jpeg
+```
+
+#### save Images
+save image at image server
+##### HTTP method
+```
+POST /image/<owner_id>
+```
+##### HTTP Request
+```
+form-data
+file: <image>
+```
+##### HTTP Response
+```json
+{
+    "content_type": <mimetype>,
+    "path": <string>,
+    "uuid": <string>
+}
+```
+
+#### save multiple image in one request
+##### HTTP method
+```
+POST /images/<owner_id>
+```
+##### HTTP Request
+```
+form-data
+file: <image>
+file1: <image>
+...
+file<n>: <image>
+```
+##### HTTP Response
+```json
+{
+    "file_key": <string>,
+    "file_name": <string>,
+    "content_type": <mimetype>,
+    "path": <string>,
+    "uuid": <string>
 }
 ```
 
