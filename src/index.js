@@ -50,10 +50,10 @@ app.get("/", (req, res) => {
     res.send("HELLO MEOW!");
 })
 
-//TODO: initial DB can be done here
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 })
+
 process.on('exit', async () => {
     await prisma.$disconnect();
 })
