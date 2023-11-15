@@ -468,7 +468,49 @@ GET /<books_id>
 ##### Response body
 ```json
 {
-    rating: <Rates>
+    rating: <float> (Average of all the rating)
+}
+```
+
+### Category
+
+#### Create Category
+Create a new category (only member PRO are allowed)
+##### HTTP Request
+```html
+POST /
+```
+##### Request body
+```json
+{
+    'categoryname': <String>
+}
+```
+##### Response body
+```json
+{
+    category: <Categorys>
+}
+```
+
+#### Get All Category
+Get existed category
+##### HTTP Request
+```html
+GET /
+```
+##### Request body
+```json
+{ }
+```
+##### Response body
+```json
+{
+    category_list: [
+        <Categorys>,
+        <Categorys>,
+        ...
+    ]
 }
 ```
 
