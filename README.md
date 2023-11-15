@@ -70,18 +70,408 @@ Model file will located at `prisma/schema.prisma`
 
 ## Class/Module Functionality
 
+### Status Code
+* 200 OK 
+    * Request sucessfully process
+* 400 Bad Request
+    * Invalid request format
+    * e.g., loss some field in request body
+    * e.g., wrong type of field (expected integer, but alphabet involved)
+* 401 Unauthorized
+    * Return this if user doesn't login
+* 403 Forbidden
+    * Return this if user doesn't have such permission
+    * e.g., read after 4 pages while doesn't login
+    * e.g., try to read the book which doesn't purchased
+* 404 Not Found
+    * Return this if data not found.
+* 500 Internal Server Error
+    * Return this if unexpected thing happended.
+
+### Permissions
+* 0 -> No login, Guest Login
+* 1 -> Logined, normal users
+* 2 -> member PRO, membership users, allow to upload books and sell
+* 8787 -> Only Admin :D, only be set while initialize database
+
 ### Users
-1. Register
-2. Login
-3. getCurrentSessions (Return Users with sessionId)
+
+#### Register
+Register user account.
+##### HTTP Request
+```html
+POST /register
+```
+##### Request body
+```json
+{
+    'username': <string>,
+    'password': <password>
+}
+```
+##### Response body
+```json
+{
+    user: <Users>
+}
+```
+
+#### Login
+login a user account.
+##### HTTP Request
+```html
+POST /login
+```
+##### Request body
+```json
+{
+    'username': <string>,
+    'password': <password>
+}
+```
+##### Response body
+```json
+{
+    user: <Users>
+}
+```
+
+#### Get Current User
+get current user information after login (with session)
+##### HTTP Request
+```html
+GET /
+```
+##### Request body
+```json
+{ }
+```
+##### Response body
+```json
+{
+    user: <Users>
+}
+```
+
+#### Edit User Information
+edit user account.
+##### HTTP Request
+```html
+PUT /
+```
+##### Request body
+```json
+{
+    'username': <string>,
+    'password': <password>
+}
+```
+##### Response body
+```json
+{
+    user: <Users>
+}
+```
+
+#### Add Member
+Edit a user to member PRO (permission set to 2). **Note that only admin can do this**
+##### HTTP Request
+```html
+POST /<id>
+```
+##### Request body
+```json
+{}
+```
+##### Response body
+```json
+{
+    user: <Users>
+}
+```
 
 ### Books
-TODO
+
+#### Get All Books
+Return all books
+##### HTTP Request
+```html
+GET /
+```
+##### Request body
+```json
+{}
+```
+##### Response body
+```json
+{
+    book_list: [
+        <Book>,
+        <Book>,
+        ...
+    ]
+}
+```
+
+#### GetRecommendBooks
+Return recommend books
+##### HTTP Request
+```html
+GET /recommends
+```
+##### Request body
+```json
+{}
+```
+##### Response body
+```json
+{
+    book_list: [
+        <Book>,
+        <Book>,
+        ...
+    ]
+}
+```
+
+#### GetBooksByCategorys
+Return books by category filter (*can be seen as getAllBooks with additional filter*)
+##### HTTP Request
+```html
+GET /
+```
+##### Request body
+```json
+{
+    Categorys: [ 
+        <category_id>,
+        <category_id>,
+        ...
+    ]
+}
+```
+##### Response body
+```json
+{
+    book_list: [
+        <Book>,
+        <Book>,
+        ...
+    ]
+}
+```
+
+#### GetCollectionBooks
+Get Collection Books for current user
+##### HTTP Request
+```html
+GET /collections
+```
+##### Request body
+```json
+{}
+```
+##### Response body
+```json
+{
+    book_list: [
+        <Book>,
+        <Book>,
+        ...
+    ]
+}
+```
+
+#### GetBooksByAgeRange
+Return books that have age lies on the range
+##### HTTP Request
+```html
+GET /age/<age1>/<age2>
+```
+##### Request body
+```json
+{}
+```
+##### Response body
+```json
+{
+    book_list: [
+        <Book>,
+        <Book>,
+        ...
+    ]
+}
+```
+
+#### GetBooksByPriceRange
+Return books that have price lies on the range
+##### HTTP Request
+```html
+GET /price/<price1>/<price2>
+```
+##### Request body
+```json
+{}
+```
+##### Response body
+```json
+{
+    book_list: [
+        <Book>,
+        <Book>,
+        ...
+    ]
+}
+```
+
+#### GetPurchasedBooks
+Return purchased books of current users
+##### HTTP Request
+```html
+GET /purchased
+```
+##### Request body
+```json
+{}
+```
+##### Response body
+```json
+{
+    book_list: [
+        <Book>,
+        <Book>,
+        ...
+    ]
+}
+```
+
+#### Create Books
+Create a books. Note that only member PRO can use this function 
+##### HTTP Request
+```html
+POST /
+```
+##### Request body
+```json
+{
+    'bookname': <string>,
+    'description': <string>,
+    'category_ids': [
+        <integer>,
+        <integer>,
+        ...
+    ],
+    'images': [
+        <binary>,
+        <binary>,
+        ...
+    ],
+    'age': <integer>,
+    'price': <float>,
+}
+```
+##### Response body
+```json
+{
+    book: <Book>
+}
+```
+
+#### Edit Books (only content)
+Edit the information of book (only author can edit! owner.id === request.session.user.id)
+##### HTTP Request
+```html
+PUT /edit/<id>
+```
+##### Request body
+```json
+{
+    'bookname': <string>,
+    'description': <string>,
+    'category_ids': [
+        <integer>,
+        <integer>,
+        ...
+    ],
+    'age': <integer>,
+    'price': <integer>
+}
+```
+##### Response body
+```json
+{
+    book: <Book>
+}
+```
+
+#### EditBooksContentById
+Edit book's content by per images. Only Author can use this function.
+##### HTTP Request
+```html
+PUT /edit/<book_id>/pages/<page_id>
+```
+##### Request body
+```json
+{
+    'content': <binary/image>
+}
+```
+##### Response body
+```json
+{}
+```
+
+#### Delete Books
+Delete the book (Only author can do this)
+##### HTTP Request
+```html
+DELETE /<book_id>
+```
+##### Request body
+```json
+{ }
+```
+##### Response body
+```json
+{ }
+```
+
+#### GetBooksContentById
+Return the images (content) of the book by requested pages id
+##### HTTP Request
+```html
+GET /<books_id>/pages/<image_id>
+```
+##### Request body
+```json
+{}
+```
+##### Response body
+```json
+{
+    'content': <image/binary>
+}
+```
 
 ### Rates
-1. GetBookRatingById
-2. GetUsersRatingById
-3. GetRatingById
 
-## API Spec
+#### Get Book Rating
+Return the rating of the book by id requested
+##### HTTP Request
+```html
+GET /<books_id>
+```
+##### Request body
+```json
+{}
+```
+##### Response body
+```json
+{
+    rating: <Rates>
+}
+```
+
+
+## API Spec (WILL BE DONE AFTER FINISH)
 TODO with swagger
