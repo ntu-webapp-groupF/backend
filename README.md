@@ -46,6 +46,8 @@ $ yarn start
     * API handler
 * redis
     * Caching
+* multer
+    * Upload File Handler
 * swagger-jsdoc
     * API documentation generator
     * https://www.npmjs.com/package/swagger-jsdoc
