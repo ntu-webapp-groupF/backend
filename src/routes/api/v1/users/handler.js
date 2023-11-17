@@ -1,6 +1,12 @@
 import bcrypt from 'bcryptjs';
 import { prisma } from '../../../../adapters.js';
 
+function exclude(obj, keys) {
+    for (let key of keys) {
+      delete obj[key]
+    }
+    return obj
+}
 /**
  * 
  * @param {import('express').Request} req 
@@ -16,6 +22,14 @@ export async function loginHandler(req, res) {
 
 	const { username, password } = req.body;
 
+	if ( !username || !password ) {
+		return res.status(400).json({ error: "Bad request field."})
+	}
+
+	if (req.session.user) {
+		return res.status(400).json( { error: "User already login."})
+	}
+
 	const user = await prisma.users.findUnique({
 		where: {
 			username
@@ -24,13 +38,14 @@ export async function loginHandler(req, res) {
 
 	if (!user) {
 		console.log("User does not exist.")
-		return res.status(401).json({ error: "User does not exist." });
+		return res.status(404).json({ error: "User does not exist." });
 	}
 
 	const auth = await bcrypt.compare(password, user.password);
 	if (auth) {
 		console.log("User login.")
-		return res.status(200).send(); //TODO
+		req.session.user = user;
+		return res.status(200).send(exclude(user,['password']));
 	} else {
 		console.log("Password incorrect.")
 		return res.status(401).json({ error : "Password incorrect."});
@@ -41,7 +56,7 @@ export async function registerHandler(req, res) {
 
 	const { username, password } = req.body;
 
-	if ( !username || !password ) {
+	if (!username || !password) {
 		return res.status(400).json({ error: "Bad Request field." })
 	} 
 
@@ -73,5 +88,5 @@ export async function registerHandler(req, res) {
 		return res.status(500).json({ error: "Internal Server Error."})
 	}
 
-	return res.status(200).send(new_user);
+	return res.status(200).send(exclude(new_user, ['password']));
 }
