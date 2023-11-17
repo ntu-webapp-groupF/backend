@@ -12,10 +12,21 @@ function exclude(obj, keys) {
  * @param {import('express').Request} req 
  * @param {import('express').Response} res 
 */
-export async function getAllUsers(req, res) {
-	const users = await prisma.users.findMany();
-	console.log(users);
-	return res.status(200).send(users);
+export async function getCurrentUser(req, res) {
+
+	if (!req.session.user) {
+		return res.status(400).json( { error: "User does not login."})
+	}
+
+	const user = await prisma.users.findUnique( {
+		where: {
+			id: req.session.user.id,
+		}
+	})
+
+	req.session.user = user
+
+	return res.status(200).send(exclude(user, ['password']);
 }
 
 export async function loginHandler(req, res) {
@@ -32,7 +43,7 @@ export async function loginHandler(req, res) {
 
 	const user = await prisma.users.findUnique({
 		where: {
-			username
+			username : username
 		}
 	});
 
@@ -67,7 +78,7 @@ export async function registerHandler(req, res) {
 	const salt = await bcrypt.genSalt(10);
 	const user = await prisma.users.findUnique({
 		where: {
-			username
+			username : username
 		}
 	});
 
