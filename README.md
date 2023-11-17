@@ -364,9 +364,9 @@ POST /
 {
     'bookname': <string>,
     'description': <string>,
-    'category_ids': [
-        <integer>,
-        <integer>,
+    'category_names': [
+        <string>,
+        <string>,
         ...
     ],
     'images': [
