@@ -167,3 +167,47 @@ export async function updateHandler(req, res) {
 		return res.status(400).json({ error: e });
 	}
 }
+
+export async function addMember(req, res) {
+	
+	if (!req.session.user) {
+		return res.status(404).json({ error : "Page not found."});
+	}
+
+	const user = await prisma.users.findUnique({
+		where : {
+			id: req.session.user.id, 
+		}
+	});
+
+	if (!user || user.permission !== 8787) {
+		return res.status(404).json({ error: "Page not found."});
+	}
+
+	const userid = parseInt(req.params.id);
+	
+	if (userid === req.session.user.id) {
+		return res.status(400).json({ error: "Operation failed."});
+	}
+
+	try {
+		const member = await prisma.users.update({
+			where : {
+				id: userid,
+			},
+			data: {
+				permission: 2,
+			},
+		});
+
+		if (!member) {
+			return res.status(500).json({ error: "Internal server error."});
+		}
+		return res.status(200).send(exclude(member, ['password']));
+	} catch(e) {
+		return res.status(404).json({ error: e });
+	}
+
+
+
+}
