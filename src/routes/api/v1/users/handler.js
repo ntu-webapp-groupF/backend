@@ -207,7 +207,16 @@ export async function addMember(req, res) {
 	} catch(e) {
 		return res.status(404).json({ error: e });
 	}
+}
 
+export async function logoutHandler(req, res) {
 
+	if (!req.session.user) {
+		return res.status(401).json({ error: "User is not logged in."})
+	}
 
+	req.session.user = null;
+	req.session.destroy();
+
+	return res.status(200).send();
 }
