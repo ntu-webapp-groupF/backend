@@ -41,6 +41,14 @@ export async function registerHandler(req, res) {
 
 	const { username, password } = req.body;
 
+	if ( !username || !password ) {
+		return res.status(400).json({ error: "Bad Request field." })
+	} 
+
+	if (username.length > 20 || password.length < 6 || password.length > 20) {
+		return res.status(400).json({ error: "Illegal username or password."})
+	}
+
 	const salt = await bcrypt.genSalt(10);
 	const user = await prisma.users.findUnique({
 		where: {
@@ -50,16 +58,20 @@ export async function registerHandler(req, res) {
 
 	if (user) {
 		console.log("User already register")
-		return res.status(401).json({ error: "Username already registered." })
+		return res.status(400).json({ error: "Username already registered." })
 	}
 
-	const dummy = await prisma.users.create({
+	const new_user = await prisma.users.create({
 		data: {
 			username: username,
 			password: await bcrypt.hash(password, salt),
-			permission: 0	// TODO
+			permission: 1,
 		},
 	})
-	console.log("User register.")
-	return res.status(201).send();
+
+	if (!new_user) {
+		return res.status(500).json({ error: "Internal Server Error."})
+	}
+
+	return res.status(200).send(new_user);
 }
