@@ -162,7 +162,7 @@ GET /
 ```
 
 #### Edit User Information
-edit user account.
+edit user account. **Frontend must set username as default in form**
 ##### HTTP Request
 ```html
 PUT /
@@ -171,7 +171,8 @@ PUT /
 ```json
 {
     'username': <string>,
-    'password': <password>
+    'old_password': <string>,
+    'new_password': <string>
 }
 ```
 ##### Response body
@@ -396,9 +397,9 @@ PUT /edit/<id>
 {
     'bookname': <string>,
     'description': <string>,
-    'category_ids': [
-        <integer>,
-        <integer>,
+    'category_names': [
+        <string>,
+        <string>,
         ...
     ],
     'age': <integer>,
