@@ -6,18 +6,6 @@ import { prisma } from '../../../../adapters.js';
  * @param {import('express').Request} req 
  * @param {import('express').Response} res 
 */
-export async function testUpload(req, res) {
-    console.log(req.files)
-    console.log(req.body)
-    console.log(req.body['test3'] == null)
-	return res.status(200).json({'message': 'OK'})
-}
-
-/**
- * 
- * @param {import('express').Request} req 
- * @param {import('express').Response} res 
-*/
 export async function createBooks(req, res) {
     // no session, bye bye
     if( !req.session || !req.session.user ){
@@ -103,6 +91,13 @@ export async function createBooks(req, res) {
         }
     }
 
+    const ownership = await prisma.ownerships.create({
+        data: {
+            users_id: req.session.user.id,
+            books_id: book.id
+        }
+    });
+
     return res.status(200).json(book);
 }
 
@@ -132,11 +127,14 @@ export async function editBooksInfo(req, res){
         const book = await prisma.books.findUnique({
             where: {
                 id: book_id,
+                owner: req.session.user.username,
             },
             include: {
                 category_list: true,
             }
         });
+
+        if( !book ) return res.status(404).json({'message': 'Not such book exists'});
         
         const req_category_set = new Set(req.body['category_names']);
         const book_category_set = new Set();
@@ -200,16 +198,6 @@ export async function editBooksInfo(req, res){
  * @param {import('express').Request} req 
  * @param {import('express').Response} res 
 */
-export async function editBooksContent(req, res){
-    //TODO: edit book content by per images. only Author can use this function.
-    return res.status(200).json({'message': 'TODO'});
-}
-
-/**
- * 
- * @param {import('express').Request} req 
- * @param {import('express').Response} res 
-*/
 export async function deleteBooks(req, res) {
     // no session, bye bye
     if( !req.session || !req.session.user ){
@@ -239,52 +227,77 @@ export async function deleteBooks(req, res) {
  * @param {import('express').Request} req 
  * @param {import('express').Response} res 
 */
-export async function getBooksContentById(req, res){
-    try{
-        const book_id = parseInt(req.params.book_id);
-        const image_id = parseInt(req.params.image_id);
+export async function purchaseBooks(req, res) {
+    // no session, bye bye
+    if( !req.session || !req.session.user ){
+        return res.status(401).json({'message' : 'Login First!'});
+    }
 
+    const book_id = parseInt(req.params.book_id);
+    const book = await prisma.books.findUnique({
+        where: {
+            id: book_id
+        }
+    });
+    if( !book ) return res.status(404).json({'message': 'Not such Book!'});
+
+    /* OAuth here or bank transaction here */
+    const isTransmit = true;
+
+    if( isTransmit ){
         try{
-            const book = await prisma.books.findUnique({
-                where: {
-                    id: book_id,
+            const boughtBook = await prisma.boughtBooks.create({
+                data: {
+                    users_id: req.session.user.id,
+                    books_id: book.id
                 },
                 include: {
-                    images_list: {
-                        where: {
-                            id: image_id
-                        }
-                    }
+                    book: true,
                 }
-            })
-
-            if( book.images_list.length <= 0 ){
-                return res.status(404).json("image not found!");
-            }
-
-            const response = await axios({
-                method: 'get',
-                url: process.env.IMAGE_HOST + `/image`,
-                data: {
-                    path: book.images_list[0]['file_path']
-                },
-                responseType: 'stream', // Ensure the response type is a stream
             });
+            return res.status(200).json(boughtBook)
+        } catch (e) {
+            return res.status(500).json({error: 'Internal Server Error'});
+        }
+        
+    } else {
+        return res.status(400).json({'message': 'Transcation failed :<'});
+    }
+}
 
-            if( response.status === 200 ){
-                
-                res.set('Content-Type', response.headers['content-type']);
-                response.data.pipe(res);
-            } else {
-                return res.status(response.status).json(response.data);
+/**
+ * 
+ * @param {import('express').Request} req 
+ * @param {import('express').Response} res 
+*/
+export async function addBooksCollection(req, res) {
+    // no session, bye bye
+    if( !req.session || !req.session.user || req.session.user.permission <= 0 ){
+        return res.status(401).json({'message' : 'Login First!'});
+    }
+
+    const book_id = parseInt(req.params.book_id);
+    const book = await prisma.books.findUnique({
+        where: {
+            id: book_id
+        }
+    });
+    if( !book ) return res.status(404).json({'message': 'Not such Book!'});
+
+
+    try{
+        const collectionBook = await prisma.collections.create({
+            data: {
+                users_id: req.session.user.id,
+                books_id: book.id
+            },
+            include: {
+                book: true,
             }
-        }
-        catch (e) {
-            return res.status(404).json({'error': e});
-        }
-
-    } catch (e) {
-        return res.status(400).json({'error': 'Bad Request Field'});
+        });
+        return res.status(200).json(collectionBook)
+    } catch(e) {
+        return res.status(500).json({error: 'Internal Server Error'});
     }
 }
 
