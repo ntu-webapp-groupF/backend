@@ -1,14 +1,19 @@
 // in src/routes/api/v1/users/index.js
 import { Router } from 'express';
-import { getAllUsers, registerHandler, loginHandler } from './handler.js';
+import { getCurrentUser, registerHandler, loginHandler, logoutHandler, updateHandler, addMember } from './handler.js';
 
 const router = Router();
 
-//TODO: add something here
-router.get('/', getAllUsers);
+router.get('/', getCurrentUser);
 
 router.post('/register', registerHandler);
 
 router.post('/login', loginHandler);
+
+router.post('/logout', logoutHandler);
+
+router.put('/update', updateHandler);
+
+router.post('/add/:id', addMember)
 
 export default router;
