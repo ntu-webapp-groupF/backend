@@ -386,6 +386,40 @@ POST /
 }
 ```
 
+#### Purchased Books
+Purchased a books.
+##### HTTP Request
+```html
+POST /purchased/<book_id>
+```
+##### Request body
+```json
+{ }
+```
+##### Response body
+```json
+{
+    book: <Book>
+}
+```
+
+#### add Books to Collection
+Add a books to collection
+##### HTTP Request
+```html
+POST /collection/<book_id>
+```
+##### Request body
+```json
+{ }
+```
+##### Response body
+```json
+{
+    book: <Book>
+}
+```
+
 #### Edit Books (only content)
 Edit the information of book (only author can edit! owner.id === request.session.user.id)
 ##### HTTP Request
@@ -413,23 +447,6 @@ PUT /edit/<id>
 }
 ```
 
-#### EditBooksContentById
-Edit book's content by per images. Only Author can use this function.
-##### HTTP Request
-```html
-PUT /edit/<book_id>/pages/<page_id>
-```
-##### Request body
-```json
-{
-    'content': <binary/image>
-}
-```
-##### Response body
-```json
-{}
-```
-
 #### Delete Books
 Delete the book (Only author can do this)
 ##### HTTP Request
@@ -443,23 +460,6 @@ DELETE /<book_id>
 ##### Response body
 ```json
 { }
-```
-
-#### GetBooksContentById
-Return the images (content) of the book by requested pages id
-##### HTTP Request
-```html
-GET /<books_id>/pages/<image_id>
-```
-##### Request body
-```json
-{}
-```
-##### Response body
-```json
-{
-    'content': <image/binary>
-}
 ```
 
 ### Rates
@@ -479,6 +479,42 @@ GET /<books_id>
 {
     rating: <float> (Average of all the rating)
 }
+```
+
+### Content/Image
+
+#### GetBooksContentById
+Return the images (content) of the book by requested pages id
+##### HTTP Request
+```html
+GET /<books_id>/pages/<image_id>
+```
+##### Request body
+```json
+{}
+```
+##### Response body
+```json
+{
+    'content': <image/binary>
+}
+```
+
+#### EditBooksContentById
+Edit book's content by per images. Only Author can use this function.
+##### HTTP Request
+```html
+PUT /<book_id>/pages/<image_id>
+```
+##### Request body
+```json
+{
+    'content': <binary/image>
+}
+```
+##### Response body
+```json
+{}
 ```
 
 ### Category
