@@ -587,6 +587,42 @@ file<n>: <image>
 }
 ```
 
+#### delete single image
+##### HTTP method
+```
+POST /delete/image
+```
+##### HTTP Request
+```
+{
+    "path": <string>,
+}
+```
+##### HTTP Response
+```json
+{ }
+```
+
+#### edit (replace) single image
+##### HTTP method
+```
+POST /edit/image/owner_id
+```
+##### HTTP Request
+```
+form-data
+path: <string>,
+file: <image>
+```
+##### HTTP Response
+```json
+{
+    "content_type": <mimetype>,
+    "path": <string>,
+    "uuid": <string>
+}
+```
+
 
 ## API Spec (WILL BE DONE AFTER FINISH)
 TODO with swagger

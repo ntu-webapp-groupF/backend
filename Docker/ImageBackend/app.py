@@ -137,5 +137,69 @@ def get_image():
     except:
         return make_response('bad request ya', 400)
 
+@app.route('/delete/image', methods=['POST'])
+def delete_image_by_path():
+    request_json = request.get_json()
+    try:
+        file_path = request_json['path']
+        file_path.replace('../', '')
+
+        if not os.path.isfile(file_path):
+            return make_response('File not found', 404)
+        
+        os.remove(file_path)
+
+        if not os.path.isfile(file_path):
+            return make_response('OK', 200)
+        else:
+            return make_response('Something is wrong', 500)
+    except:
+        return make_response('bad request', 400)
+    
+@app.route('/edit/image/<owner_id>', methods=['POST'])
+def edit_image(owner_id):
+    # request body must have owner_id.
+    key = (secret_key + str(owner_id)).encode()
+    hash_key = hashlib.md5(key).hexdigest()
+
+    if 'file' not in request.files:
+        return make_response('no file found QAQ', 400)
+    
+    try:
+        file_path = request.form['path']
+        file = request.files['file']
+        file_path.replace('../', '')
+
+        if not os.path.isfile(file_path):
+            return make_response('File not found', 404)
+        
+        if not file.content_type in ext_dict.keys():
+            return make_response('invalid file content type', 400)
+
+        ext = ext_dict[file.content_type]
+        file_uuid = uuid.uuid4().hex
+        prefix_path = os.path.join(app.config['UPLOAD_FOLDER'], hash_key)
+        try:
+            # make sure it is created
+            os.mkdir(prefix_path)
+        except:
+            pass
+
+        path = os.path.join(prefix_path, secure_filename(f'{file_uuid}{ext}'))
+
+        os.remove(file_path)
+        if os.path.isfile(file_path):
+            return make_response('Something is wrong...', 500)
+
+        file.save(path)
+        result = {
+            'path': path,
+            'uuid': file_uuid,
+            'content_type': file.content_type
+        }
+        return make_response(jsonify(result), 200)
+    except:
+        return make_response('something is wrong', 500)
+
 if __name__ == '__main__':
     app.run('0.0.0.0', 5787)
