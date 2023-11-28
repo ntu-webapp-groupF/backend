@@ -44,8 +44,8 @@ $ yarn start
     * Password hashing for user
 * axios
     * API handler
-* redis
-    * Caching
+* redis, connect-redis
+    * Caching request + session
 * multer
     * Upload File Handler
 * swagger-jsdoc

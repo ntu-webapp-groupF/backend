@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { prisma } from '../../../../adapters.js';
-import client from '../../../../adapters.js';
+import { prisma, redisClient } from '../../../../adapters.js';
 
 
 function exclude(obj, keys) {
@@ -21,7 +20,7 @@ export async function getCurrentUser(req, res) {
 	}
 
 	try {
-		const cache = await client.get(req.session.user.username);
+		const cache = await redisClient.get(req.session.user.username);
 		if (cache) {
 			return res.status(200).send({
 				fromCache: true,
@@ -40,7 +39,7 @@ export async function getCurrentUser(req, res) {
 
 			req.session.user = user;
 			const val = exclude(user, ['password']);
-			await client.set(user.username, val);
+			await redisClient.set(user.username, val);
 
 			return res.status(200).send({
 				fromCache: false,
@@ -82,7 +81,7 @@ export async function loginHandler(req, res) {
 		if (auth) {
 			req.session.user = user;
 			const val = exclude(user, ['password']);
-			await client.set(user.username, JSON.stringify(val));
+			await redisClient.set(user.username, JSON.stringify(val));
 
 			return res.status(200).send(val);
 		} else {
@@ -114,7 +113,7 @@ export async function registerHandler(req, res) {
 
 	try {
 		const salt = await bcrypt.genSalt(10);
-		const cache = await client.get(username);
+		const cache = await redisClient.get(username);
 
 		let user;
 
@@ -145,7 +144,7 @@ export async function registerHandler(req, res) {
 		}
 
 		const val = exclude(new_user, ['password']);
-		await client.set(new_user.username, JSON.stringify(val));
+		await redisClient.set(new_user.username, JSON.stringify(val));
 		return res.status(200).send(val);
 
 	} catch (e) {
@@ -165,9 +164,9 @@ export async function updateHandler(req, res) {
 
 	try {
 
-		const cache = await client.get(req.body.username);
+		const cache = await redisClient.get(req.body.username);
 		if (cache) {
-			await client.del(req.body.username);
+			await redisClient.del(req.body.username);
 		}
 
 		if (req.body.old_password && req.body.new_password) {

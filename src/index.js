@@ -2,14 +2,17 @@ import express from 'express';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import rootRouter from './routes/index.js';
-import { prisma } from "./adapters.js";
-import client from './adapters.js';
+import { prisma, redisClient } from "./adapters.js";
+import RedisStore from "connect-redis"
 import crypto from 'crypto';
 import cors from 'cors';
 
 const port = process.env.PORT || 8000;
 
 const app = express();
+if( redisClient.isOpen ){
+    console.log(`Redis is listening at 6379 port`)
+}
 
 app.use(express.json({limit: '1mb'}));
 // CORS middleware, origin change to be frontend
@@ -23,17 +26,17 @@ if( process.env.NODE_ENV === 'production' ){
 }
 app.use(
     session({
-        cookie: {
-        httpOnly: true,
-        sameSite: "strict",
-        secure: process.env.NODE_ENV === "production",
-        maxAge: null, // session cookie
-        },
-        // use random secret
+        store: new RedisStore({ client: redisClient }),
         name: "sessionId", // don't omit this option
         secret: token,
         resave: false,
         saveUninitialized: false,
+        cookie: {
+            httpOnly: true,
+            sameSite: "strict",
+            secure: process.env.NODE_ENV === "production",
+            maxAge: null, // session cookie
+        },
     })
 );
 app.use(cookieParser());
@@ -49,5 +52,24 @@ app.listen(port, () => {
 
 process.on('exit', async () => {
     await prisma.$disconnect();
-    await client.quit();
+    await redisClient.quit();
 })
+
+
+/*
+app.use(
+    session({
+        cookie: {
+        httpOnly: true,
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: null, // session cookie
+        },
+        // use random secret
+        name: "sessionId", // don't omit this option
+        secret: token,
+        resave: false,
+        saveUninitialized: false,
+    })
+);
+*/
