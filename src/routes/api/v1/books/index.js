@@ -16,6 +16,7 @@ router.post('/purchased/:book_id', purchaseBooks);
 router.post('/collection/:book_id', addBooksCollection);
 router.get('/recommends', getRecommendBooks)
 router.get('/collections', getCollectionBooks)
+router.post('/age/:age1/:age2', getBooksByAgeRange);
 
 
 export default router;

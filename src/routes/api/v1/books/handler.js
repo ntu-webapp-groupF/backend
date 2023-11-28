@@ -382,7 +382,7 @@ export async function getBooksByCategorys(req, res) {
  * @param {import('express').Response} res 
 */
 export async function getCollectionBooks(req, res){
-    //TODO: return collection books for current user
+    //get all collections by user_id
     try{
         const allCollections = await prisma.collections.findMany({
           where: {
@@ -392,6 +392,7 @@ export async function getCollectionBooks(req, res){
     }catch (e) {
         return res.status(500).json({'message': e});
     }
+    //search all books from allCollections by book_id
     const books;
     try{
         for(const element of allCollections){
@@ -415,8 +416,20 @@ export async function getCollectionBooks(req, res){
  * @param {import('express').Response} res 
 */
 export async function getBooksByAgeRange(req, res){
-    //TODO: return books that have age lies on the range in request
-    return res.status(500).json({'message': 'TODO'});
+    
+    try{
+        const books = await prisma.books.findMany({
+            where: {
+                age:{
+                    gte:req.params.age1;
+                    lte:req.params.age2;
+                },
+            }
+        });
+        return res.json(books).status(200);
+    } catch (e) {
+        return res.status(500).json({'message': e});
+    }
 }
 
 /**
