@@ -439,7 +439,20 @@ export async function getBooksByAgeRange(req, res){
 */
 export async function getBooksByPriceRange(req, res){
     //TODO: return books that have price lies on the range in request
-    return res.status(500).json({'message': 'TODO'});
+    try{
+        const books = await prisma.books.findMany({
+            where: {
+                price:{
+                    gte:req.params.price1;
+                    lte:req.params.price2;
+                },
+            }
+        });
+        return res.json(books).status(200);
+    } catch (e) {
+        return res.status(500).json({'message': e});
+    }
+    
 }
 
 /**
@@ -449,7 +462,32 @@ export async function getBooksByPriceRange(req, res){
 */
 export async function getPurchasedBooks(req, res){
     //TODO: return books that have purchased by current users
-    return res.status(500).json({'message': 'TODO'});
+    //get all boughtBooks by user_id
+    try{
+        const allBoughtBooks = await prisma.boughtBooks.findMany({
+          where: {
+            users_id: req.session.user.id,
+          },
+        })
+    }catch (e) {
+        return res.status(500).json({'message': e});
+    }
+    //search all books from allBoughtBooks by book_id
+    const books;
+    try{
+        for(const element of allBoughtBooks){
+            const book = await prisma.books.findUnique({
+                where: {
+                    id: element.books_id;
+                }
+            });
+            books.append(book);
+        }
+        return res.json(books).status(200);
+    }catch (e) {
+        return res.status(500).json({'message': e});
+    }
+    
 }
 
 
