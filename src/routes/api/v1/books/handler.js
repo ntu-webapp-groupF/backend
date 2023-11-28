@@ -327,8 +327,33 @@ export async function getAllBooks(req, res) {
  * @param {import('express').Response} res 
 */
 export async function getRecommendBooks(req, res) {
-    //TODO: return recommend books
-    return res.status(500).json({'message': 'TODO'});
+    //filter by userid from historys
+    const findCategorys = await prisma.historys.findMany({
+      where: {
+        users_id: req.session.user.id,
+      },
+      orderBy: {
+        times: 'desc',
+      },
+    })
+    // set category_id to 0 if user_id not found in historys
+    const category_id = 0;
+    if(findCategorys){
+        category_id = findCategorys[0].categorys_id;
+    }
+    //get books by category_id
+    try{
+        const books = await prisma.books.findMany({
+            where: {
+                category_list: category_id,
+            }
+        });
+        return res.json(books).status(200);
+    } catch (e) {
+        return res.status(500).json({'message': e});
+    }
+
+
 }
 
 /**
@@ -338,7 +363,17 @@ export async function getRecommendBooks(req, res) {
 */
 export async function getBooksByCategorys(req, res) {
     //TODO: return books by categorys filter
-    return res.status(500).json({'message': 'TODO'});
+    const category_id = parseInt(req.params.category_id);
+    try{
+        const books = await prisma.books.findMany({
+            where: {
+                category_list: category_id,
+            }
+        });
+        return res.json(books).status(200);
+    } catch (e) {
+        return res.status(500).json({'message': e});
+    }
 }
 
 /**

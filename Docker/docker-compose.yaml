@@ -16,7 +16,7 @@ services:
         image: python:3.11-alpine
         build: ./ImageBackend
         environment:
-            - 'secret_key: hehehehe'
+            - 'secret_key:hehehehe'
         ports:
             - '5787:5787'
         volumes:
