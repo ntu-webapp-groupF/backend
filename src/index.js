@@ -3,20 +3,13 @@ import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import rootRouter from './routes/index.js';
 import { prisma } from "./adapters.js";
+import client from './adapters.js';
 import crypto from 'crypto';
 import cors from 'cors';
-import redis from 'redis';
 
 const port = process.env.PORT || 8000;
 
 const app = express();
-
-/* TODO: setup redis server
-const client = redis.createClient(6379);
-client.on('connect', () => {
-    console.log('Redis client connected');
-});
-*/
 
 app.use(express.json({limit: '1mb'}));
 // CORS middleware, origin change to be frontend
@@ -56,4 +49,5 @@ app.listen(port, () => {
 
 process.on('exit', async () => {
     await prisma.$disconnect();
+    await client.quit();
 })

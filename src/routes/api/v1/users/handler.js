@@ -1,5 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { prisma } from '../../../../adapters.js';
+import client from '../../../../adapters.js';
+
 
 function exclude(obj, keys) {
 	for (let key of keys) {
@@ -18,55 +20,89 @@ export async function getCurrentUser(req, res) {
 		return res.status(401).json({ error: "Please login first" });
 	}
 
-	const user = await prisma.users.findUnique({
-		where: {
-			id: req.session.user.id,
-		}
-	});
+	try {
+		const cache = await client.get(req.session.user.username);
+		if (cache) {
+			return res.status(200).send({
+				fromCache: true,
+				data: JSON.parse(cache),
+			});
+		} else {
+			const user = await prisma.users.findUnique({
+				where: {
+					id: req.session.user.id,
+				}
+			});
 
-	if (!user) {
-		return res.status(500).json({ error: "Internal server error." });
+			if (!user) {
+				return res.status(500).json({ error: "Internal server error." });
+			}
+
+			req.session.user = user;
+			const val = exclude(user, ['password']);
+			await client.set(user.username, val);
+
+			return res.status(200).send({
+				fromCache: false,
+				data: val,
+			});
+		}
+	} catch (e) {
+		console.log(e);
+		return res.status(500).json({ error: e });
 	}
 
-	req.session.user = user;
-
-	return res.status(200).send(exclude(user, ['password']));
 }
 
 export async function loginHandler(req, res) {
 
 	const { username, password } = req.body;
 
-	if (!username || !password) {
-		return res.status(400).json({ error: "Bad request field." });
-	}
-
 	if (req.session.user) {
 		return res.status(400).json({ error: "User already logged in." });
 	}
 
-	const user = await prisma.users.findUnique({
-		where: {
-			username: username
+	if (!username || !password) {
+		return res.status(400).json({ error: "Bad request field." });
+	}
+
+	try {
+		const user = await prisma.users.findUnique({
+			where: {
+				username: username
+			}
+		});
+
+
+		if (!user) {
+			return res.status(404).json({ error: "Wrong username or password." });
 		}
-	});
 
-	if (!user) {
-		return res.status(404).json({ error: "Wrong username or password." });
+		const auth = await bcrypt.compare(password, user.password);
+		if (auth) {
+			req.session.user = user;
+			const val = exclude(user, ['password']);
+			await client.set(user.username, JSON.stringify(val));
+
+			return res.status(200).send(val);
+		} else {
+			return res.status(401).json({ error: "Wrong username or password" });
+		}
+	} catch (e) {
+		console.log(e);
+		return res.status(500).json({ error: e })
 	}
 
-	const auth = await bcrypt.compare(password, user.password);
-	if (auth) {
-		req.session.user = user;
-		return res.status(200).send(exclude(user, ['password']));
-	} else {
-		return res.status(401).json({ error: "Wrong username or password" });
-	}
+
 }
 
 export async function registerHandler(req, res) {
 
 	const { username, password } = req.body;
+
+	if (req.session.user) {
+		return res.status(400).json({ error: "User already logged in." });
+	}
 
 	if (!username || !password) {
 		return res.status(400).json({ error: "Bad Request field." });
@@ -76,30 +112,45 @@ export async function registerHandler(req, res) {
 		return res.status(400).json({ error: "Illegal username or password." });
 	}
 
-	const salt = await bcrypt.genSalt(10);
-	const user = await prisma.users.findUnique({
-		where: {
-			username: username
+	try {
+		const salt = await bcrypt.genSalt(10);
+		const cache = await client.get(username);
+
+		let user;
+
+		if (cache) {
+			return res.status(400).json({ error: "Username already registered." });
+		} else {
+			user = await prisma.users.findUnique({
+				where: {
+					username: username
+				}
+			});
 		}
-	});
 
-	if (user) {
-		return res.status(400).json({ error: "Username already registered." });
+		if (user) {
+			return res.status(400).json({ error: "Username already registered." });
+		}
+
+		const new_user = await prisma.users.create({
+			data: {
+				username: username,
+				password: await bcrypt.hash(password, salt),
+				permission: 1,
+			},
+		});
+
+		if (!new_user) {
+			return res.status(500).json({ error: "Internal Server Error." });
+		}
+
+		const val = exclude(new_user, ['password']);
+		await client.set(new_user.username, JSON.stringify(val));
+		return res.status(200).send(val);
+
+	} catch (e) {
+		return res.status(200).json({ error: e });
 	}
-
-	const new_user = await prisma.users.create({
-		data: {
-			username: username,
-			password: await bcrypt.hash(password, salt),
-			permission: 1,
-		},
-	});
-
-	if (!new_user) {
-		return res.status(500).json({ error: "Internal Server Error." });
-	}
-
-	return res.status(200).send(exclude(new_user, ['password']));
 }
 
 export async function updateHandler(req, res) {
@@ -113,10 +164,16 @@ export async function updateHandler(req, res) {
 	}
 
 	try {
+
+		const cache = await client.get(req.body.username);
+		if (cache) {
+			await client.del(req.body.username);
+		}
+
 		if (req.body.old_password && req.body.new_password) {
 			if (req.body.new_password.length < 6 || req.body.new_password.length > 20 ||
 				req.body.old_password === req.body.new_password) {
-					return res.status(400).json({ error: "Illegal password update operation."});
+				return res.status(400).json({ error: "Illegal password update operation." });
 			}
 
 			const user = await prisma.users.findUnique({
@@ -126,7 +183,7 @@ export async function updateHandler(req, res) {
 			});
 
 			if (!user) {
-				return res.status(500).json({ error: "Internal server error."});
+				return res.status(500).json({ error: "Internal server error." });
 			}
 
 			const auth = await bcrypt.compare(req.body.old_password, user.password);
@@ -143,7 +200,7 @@ export async function updateHandler(req, res) {
 				});
 
 				if (!updated) {
-					return res.status(500).json({ error: "Internal server error."});
+					return res.status(500).json({ error: "Internal server error." });
 				}
 				return res.status(200).send(exclude(updated, ['password']));
 			} else {
@@ -159,7 +216,7 @@ export async function updateHandler(req, res) {
 				},
 			});
 			if (!updated) {
-				return res.status(500).json({ error: "Internal server error."});
+				return res.status(500).json({ error: "Internal server error." });
 			}
 			return res.status(200).send(exclude(updated, ['password']));
 		}
@@ -169,30 +226,30 @@ export async function updateHandler(req, res) {
 }
 
 export async function addMember(req, res) {
-	
+
 	if (!req.session.user) {
-		return res.status(404).json({ error : "Page not found."});
+		return res.status(404).json({ error: "Page not found." });
 	}
 
 	const user = await prisma.users.findUnique({
-		where : {
-			id: req.session.user.id, 
+		where: {
+			id: req.session.user.id,
 		}
 	});
 
 	if (!user || user.permission !== 8787) {
-		return res.status(404).json({ error: "Page not found."});
+		return res.status(404).json({ error: "Page not found." });
 	}
 
 	const userid = parseInt(req.params.id);
-	
+
 	if (userid === req.session.user.id) {
-		return res.status(400).json({ error: "Operation failed."});
+		return res.status(400).json({ error: "Operation failed." });
 	}
 
 	try {
 		const member = await prisma.users.update({
-			where : {
+			where: {
 				id: userid,
 			},
 			data: {
@@ -201,10 +258,10 @@ export async function addMember(req, res) {
 		});
 
 		if (!member) {
-			return res.status(500).json({ error: "Internal server error."});
+			return res.status(500).json({ error: "Internal server error." });
 		}
 		return res.status(200).send(exclude(member, ['password']));
-	} catch(e) {
+	} catch (e) {
 		return res.status(404).json({ error: e });
 	}
 }
@@ -212,7 +269,7 @@ export async function addMember(req, res) {
 export async function logoutHandler(req, res) {
 
 	if (!req.session.user) {
-		return res.status(401).json({ error: "User is not logged in."})
+		return res.status(401).json({ error: "User is not logged in." })
 	}
 
 	req.session.user = null;
