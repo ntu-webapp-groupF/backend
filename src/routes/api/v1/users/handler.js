@@ -67,24 +67,12 @@ export async function loginHandler(req, res) {
 	}
 
 	try {
-		let user;
-		const cache = await client.get(username);
+		const user = await prisma.users.findUnique({
+			where: {
+				username: username
+			}
+		});
 
-		if (cache) {
-			user = JSON.parse(cache);
-			req.session.user = user;
-
-			return res.status(200).send({
-				fromCache: true,
-				data: JSON.parse(cache),
-			});
-		} else {
-			user = await prisma.users.findUnique({
-				where: {
-					username: username
-				}
-			});
-		}
 
 		if (!user) {
 			return res.status(404).json({ error: "Wrong username or password." });
@@ -96,10 +84,7 @@ export async function loginHandler(req, res) {
 			const val = exclude(user, ['password']);
 			await client.set(user.username, JSON.stringify(val));
 
-			return res.status(200).send({
-				fromCache: false,
-				data: val,
-			});
+			return res.status(200).send(val);
 		} else {
 			return res.status(401).json({ error: "Wrong username or password" });
 		}
