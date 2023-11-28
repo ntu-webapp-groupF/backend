@@ -383,7 +383,30 @@ export async function getBooksByCategorys(req, res) {
 */
 export async function getCollectionBooks(req, res){
     //TODO: return collection books for current user
-    return res.status(500).json({'message': 'TODO'});
+    try{
+        const allCollections = await prisma.collections.findMany({
+          where: {
+            users_id: req.session.user.id,
+          },
+        })
+    }catch (e) {
+        return res.status(500).json({'message': e});
+    }
+    const books;
+    try{
+        for(const element of allCollections){
+            const book = await prisma.books.findUnique({
+                where: {
+                    id: element.books_id;
+                }
+            });
+            books.append(book);
+        }
+        return res.json(books).status(200);
+    }catch (e) {
+        return res.status(500).json({'message': e});
+    }
+
 }
 
 /**
