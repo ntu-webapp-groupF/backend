@@ -1,6 +1,8 @@
 // in src/routes/api/v1/books/index.js
 import { Router } from 'express';
 import { createBooks, deleteBooks, getAllBooks, editBooksInfo, purchaseBooks, addBooksCollection} from './handler.js';
+import { getRecommendBooks,getCollectionBooks,getBooksByAgeRange,getBooksByPriceRange,getPurchasedBooks } from './handler.js';
+
 import multer from 'multer';
 
 const MAX_UPLOAD_IMAGE = process.env.MAX_UPLOAD_IMAGE || 10;
