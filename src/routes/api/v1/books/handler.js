@@ -327,6 +327,10 @@ export async function getAllBooks(req, res) {
  * @param {import('express').Response} res 
 */
 export async function getRecommendBooks(req, res) {
+    // no session, bye bye
+    if( !req.session || !req.session.user || req.session.user.permission <= 0 ){
+        return res.status(401).json({'message' : 'Login First!'});
+    }
     //filter by userid from historys
     const findCategorys = await prisma.historys.findMany({
       where: {
