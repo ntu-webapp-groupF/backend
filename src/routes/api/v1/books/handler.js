@@ -469,6 +469,11 @@ export async function getBooksByPriceRange(req, res){
 */
 export async function getPurchasedBooks(req, res){
     //TODO: return books that have purchased by current users
+     if( !req.session || !req.session.user || req.session.user.permission <= 0 ){
+        return res.status(401).json({'message' : 'Login First!'});
+    }
+    
+
     //get all boughtBooks by user_id
     try{
         const allBoughtBooks = await prisma.boughtBooks.findMany({
