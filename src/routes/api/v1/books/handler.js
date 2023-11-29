@@ -393,16 +393,15 @@ export async function getCollectionBooks(req, res){
         return res.status(500).json({'message': e});
     }
     //search all books from allCollections by book_id
-    const books;
     try{
-        for(const element of allCollections){
-            const book = await prisma.books.findUnique({
-                where: {
-                    id: element.books_id;
-                }
-            });
-            books.append(book);
-        }
+        
+        const books = await prisma.books.findMany({
+            where: {
+                id: { in: allCollections.books_id },
+            }
+        });
+        
+        
         return res.json(books).status(200);
     }catch (e) {
         return res.status(500).json({'message': e});
