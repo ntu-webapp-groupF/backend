@@ -386,6 +386,10 @@ export async function getBooksByCategorys(req, res) {
  * @param {import('express').Response} res 
 */
 export async function getCollectionBooks(req, res){
+    
+    if( !req.session || !req.session.user || req.session.user.permission <= 0 ){
+        return res.status(401).json({'message' : 'Login First!'});
+    }
     //get all collections by user_id
     try{
         const allCollections = await prisma.collections.findMany({
