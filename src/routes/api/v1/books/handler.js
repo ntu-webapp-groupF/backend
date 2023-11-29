@@ -442,8 +442,8 @@ export async function getBooksByPriceRange(req, res){
         const books = await prisma.books.findMany({
             where: {
                 price:{
-                    gte:req.params.price1;
-                    lte:req.params.price2;
+                    gte:req.params.price1,
+                    lte:req.params.price2,
                 },
             }
         });
@@ -472,16 +472,15 @@ export async function getPurchasedBooks(req, res){
         return res.status(500).json({'message': e});
     }
     //search all books from allBoughtBooks by book_id
-    const books;
     try{
-        for(const element of allBoughtBooks){
-            const book = await prisma.books.findUnique({
-                where: {
-                    id: element.books_id;
-                }
-            });
-            books.append(book);
-        }
+        
+        const books = await prisma.books.findMany({
+            where: {
+                id: { in: allBoughtBooks.books_id },
+            }
+        });
+        
+        
         return res.json(books).status(200);
     }catch (e) {
         return res.status(500).json({'message': e});
