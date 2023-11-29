@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+    db:
+        image: postgres:16-bookworm
+        environment:
+            POSTGRES_USER: admin
+            POSTGRES_PASSWORD: 123123
+            POSTGRES_DB: mydb
+        ports:
+            - '5432:5432'
+        hostname: postgres_db
+    redis:
+        image: redis:7-bookworm
+        ports:
+            - '6379:6379'
+        hostname: redis_db
+    image_server:
+        image: python:3.11-alpine
+        build: ./Docker/ImageBackend
+        environment:
+            - 'secret_key:hehehehe'
+        ports:
+            - '5787:5787'
+        volumes:
+            - './image_app:/usr/src/app/upload'
+        hostname: image_server
+    backend_server_1:
+        container_name: backend_server_1
+        hostname: backend_server_1
+        restart: on-failure
+        build: .
+        environment:
+            - 'PORT=8000'
+        ports:
+            - '8000:8000'
+        depends_on:
+            - db
+            - redis
+            - image_server
+    ingress:
+        container_name: nginx_ingress
+        hostname: nginx_ingress
+        restart: on-failure
+        build: ./Docker/nginx
+        ports:
+            - '8080:80'
+        depends_on:
+            - backend_server_1

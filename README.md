@@ -44,8 +44,8 @@ $ yarn start
     * Password hashing for user
 * axios
     * API handler
-* redis
-    * Caching
+* redis, connect-redis
+    * Caching request + session
 * multer
     * Upload File Handler
 * swagger-jsdoc
@@ -662,3 +662,9 @@ file: <image>
 
 ## API Spec (WILL BE DONE AFTER FINISH)
 TODO with swagger
+
+## TODO:
+
+1. Connect with Redis
+2. Build Nginx ingress 
+3. Backend wrap with docker-network
