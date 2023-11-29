@@ -420,8 +420,8 @@ export async function getBooksByAgeRange(req, res){
         const books = await prisma.books.findMany({
             where: {
                 age:{
-                    gte:req.params.age1;
-                    lte:req.params.age2;
+                    gte:req.params.age1,
+                    lte:req.params.age2,
                 },
             }
         });
