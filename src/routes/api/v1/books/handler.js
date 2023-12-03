@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { prisma } from '../../../../adapters.js';
-
+import FormData from 'form-data';
+import Blob from 'cross-blob';
 /**
  * 
  * @param {import('express').Request} req 
@@ -341,17 +342,26 @@ export async function getRecommendBooks(req, res) {
       },
     })
     // set category_id to 0 if user_id not found in historys
-    const category_id = 0;
-    if(findCategorys){
+    var category_id = 1;
+    //console.log(findCategorys);
+    if(findCategorys.length != 0){
         category_id = findCategorys[0].categorys_id;
     }
+    //console.log("Category_id:",category_id);
+
     //get books by category_id
     try{
-        const books = await prisma.books.findMany({
+        const books = await prisma.categorys.findMany({
             where: {
-                category_list: category_id,
+                id: category_id
+            },
+            
+            include: {
+                book: true
             }
+
         });
+        
         return res.json(books).status(200);
     } catch (e) {
         return res.status(500).json({'message': e});
@@ -369,11 +379,17 @@ export async function getBooksByCategorys(req, res) {
     //TODO: return books by categorys filter
     const category_id = parseInt(req.params.category_id);
     try{
-        const books = await prisma.books.findMany({
+        const books = await prisma.categorys.findMany({
             where: {
-                category_list: category_id,
+                id: category_id
+            },
+            
+            include: {
+                book: true
             }
+
         });
+        
         return res.json(books).status(200);
     } catch (e) {
         return res.status(500).json({'message': e});
@@ -386,7 +402,7 @@ export async function getBooksByCategorys(req, res) {
  * @param {import('express').Response} res 
 */
 export async function getCollectionBooks(req, res){
-    
+    console.log("getCollectionBooks");
     if( !req.session || !req.session.user || req.session.user.permission <= 0 ){
         return res.status(401).json({'message' : 'Login First!'});
     }
@@ -396,24 +412,15 @@ export async function getCollectionBooks(req, res){
           where: {
             users_id: req.session.user.id,
           },
+          include:{
+            book:true
+          }
         })
+        return res.json(allCollections).status(200);
     }catch (e) {
-        return res.status(500).json({'message': e});
+        return res.status(500).json({'message1': e});
     }
-    //search all books from allCollections by book_id
-    try{
-        
-        const books = await prisma.books.findMany({
-            where: {
-                id: { in: allCollections.books_id },
-            }
-        });
-        
-        
-        return res.json(books).status(200);
-    }catch (e) {
-        return res.status(500).json({'message': e});
-    }
+    
 
 }
 
@@ -475,28 +482,18 @@ export async function getPurchasedBooks(req, res){
     
 
     //get all boughtBooks by user_id
-    try{
+     try{
         const allBoughtBooks = await prisma.boughtBooks.findMany({
           where: {
             users_id: req.session.user.id,
           },
+          include:{
+            book:true
+          }
         })
+        return res.json(allBoughtBooks).status(200);
     }catch (e) {
-        return res.status(500).json({'message': e});
-    }
-    //search all books from allBoughtBooks by book_id
-    try{
-        
-        const books = await prisma.books.findMany({
-            where: {
-                id: { in: allBoughtBooks.books_id },
-            }
-        });
-        
-        
-        return res.json(books).status(200);
-    }catch (e) {
-        return res.status(500).json({'message': e});
+        return res.status(500).json({'message1': e});
     }
     
 }
