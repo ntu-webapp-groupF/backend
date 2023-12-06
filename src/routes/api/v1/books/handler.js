@@ -401,8 +401,9 @@ export async function getBooksByCategorys(req, res) {
  * @param {import('express').Request} req 
  * @param {import('express').Response} res 
 */
+
 export async function getCollectionBooks(req, res){
-    console.log("getCollectionBooks");
+  
     if( !req.session || !req.session.user || req.session.user.permission <= 0 ){
         return res.status(401).json({'message' : 'Login First!'});
     }
@@ -415,7 +416,7 @@ export async function getCollectionBooks(req, res){
           include:{
             book:true
           }
-        })
+        });
         return res.json(allCollections).status(200);
     }catch (e) {
         return res.status(500).json({'message1': e});
@@ -430,19 +431,19 @@ export async function getCollectionBooks(req, res){
  * @param {import('express').Response} res 
 */
 export async function getBooksByAgeRange(req, res){
-    
+    console.log(parseInt(req.params.age1),parseInt(req.params.age2));
     try{
         const books = await prisma.books.findMany({
             where: {
                 age:{
-                    gte:req.params.age1,
-                    lte:req.params.age2,
+                    gte:parseInt(req.params.age1),
+                    lte:parseInt(req.params.age2),
                 },
             }
         });
         return res.json(books).status(200);
     } catch (e) {
-        return res.status(500).json({'message': e});
+        return res.status(500).json({'message1': e});
     }
 }
 
@@ -453,18 +454,19 @@ export async function getBooksByAgeRange(req, res){
 */
 export async function getBooksByPriceRange(req, res){
     //TODO: return books that have price lies on the range in request
+
     try{
         const books = await prisma.books.findMany({
             where: {
                 price:{
-                    gte:req.params.price1,
-                    lte:req.params.price2,
+                    gte:parseInt(req.params.price1),
+                    lte:parseInt(req.params.price2),
                 },
             }
         });
         return res.json(books).status(200);
     } catch (e) {
-        return res.status(500).json({'message': e});
+        return res.status(500).json({'message1': e});
     }
     
 }
