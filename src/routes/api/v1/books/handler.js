@@ -378,10 +378,22 @@ export async function getRecommendBooks(req, res) {
 export async function getBooksByCategorys(req, res) {
     //TODO: return books by categorys filter
     const category_id = parseInt(req.params.category_id);
+    var category;
+    try{
+         category = await prisma.categorys.findUnique({
+            where: {
+                id: category_id
+            },
+
+        });
+    } catch (e) {
+        return res.status(500).json({'message1': e});
+    }
+    
     try{
         const books = await prisma.categorys.findMany({
             where: {
-                id: category_id
+                categoryname: category.categoryname
             },
             
             include: {
@@ -392,7 +404,7 @@ export async function getBooksByCategorys(req, res) {
         
         return res.json(books).status(200);
     } catch (e) {
-        return res.status(500).json({'message': e});
+        return res.status(500).json({'message2': e});
     }
 }
 
