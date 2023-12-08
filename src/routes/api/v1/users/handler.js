@@ -236,7 +236,7 @@ export async function addMember(req, res) {
 		}
 	});
 
-	if (!user || user.permission !== 8787) {
+	if (!user) {
 		return res.status(404).json({ error: "Page not found." });
 	}
 
