@@ -247,7 +247,7 @@ GET /recommends
 Return books by category filter (*can be seen as getAllBooks with additional filter*)
 ##### HTTP Request
 ```html
-GET /
+GET /category/:category_id
 ```
 ##### Request body
 ```json

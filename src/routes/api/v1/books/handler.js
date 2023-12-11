@@ -327,8 +327,44 @@ export async function getAllBooks(req, res) {
  * @param {import('express').Response} res 
 */
 export async function getRecommendBooks(req, res) {
-    //TODO: return recommend books
-    return res.status(500).json({'message': 'TODO'});
+    // no session, bye bye
+    if( !req.session || !req.session.user || req.session.user.permission <= 0 ){
+        return res.status(401).json({'message' : 'Login First!'});
+    }
+    //filter by userid from historys
+    const findCategorys = await prisma.historys.findMany({
+      where: {
+        users_id: req.session.user.id,
+      },
+      orderBy: {
+        times: 'desc',
+      },
+    })
+    // set category_id to 0 if user_id not found in historys
+    var category_id = 1;
+    //console.log(findCategorys);
+    if(findCategorys.length != 0){
+        category_id = findCategorys[0].categorys_id;
+    }
+    //console.log("Category_id:",category_id);
+
+    //get books by category_id
+    try{
+        const books = await prisma.categorys.findMany({
+            where: {
+                id: category_id
+            },
+
+            include: {
+                book: true
+            }
+
+        });
+
+        return res.json(books).status(200);
+    } catch (e) {
+        return res.status(500).json({'message': e});
+    }
 }
 
 /**
@@ -337,8 +373,35 @@ export async function getRecommendBooks(req, res) {
  * @param {import('express').Response} res 
 */
 export async function getBooksByCategorys(req, res) {
-    //TODO: return books by categorys filter
-    return res.status(500).json({'message': 'TODO'});
+    const category_id = parseInt(req.params.category_id);
+    var category;
+    try{
+         category = await prisma.categorys.findUnique({
+            where: {
+                id: category_id
+            },
+
+        });
+    } catch (e) {
+        return res.status(500).json({'message1': e});
+    }
+
+    try{
+        const books = await prisma.categorys.findMany({
+            where: {
+                categoryname: category.categoryname
+            },
+
+            include: {
+                book: true
+            }
+
+        });
+
+        return res.json(books).status(200);
+    } catch (e) {
+        return res.status(500).json({'message2': e});
+    }
 }
 
 /**
@@ -347,8 +410,23 @@ export async function getBooksByCategorys(req, res) {
  * @param {import('express').Response} res 
 */
 export async function getCollectionBooks(req, res){
-    //TODO: return collection books for current user
-    return res.status(500).json({'message': 'TODO'});
+    if( !req.session || !req.session.user || req.session.user.permission <= 0 ){
+        return res.status(401).json({'message' : 'Login First!'});
+    }
+    //get all collections by user_id
+    try{
+        const allCollections = await prisma.collections.findMany({
+          where: {
+            users_id: req.session.user.id,
+          },
+          include:{
+            book:true
+          }
+        });
+        return res.json(allCollections).status(200);
+    }catch (e) {
+        return res.status(500).json({'message1': e});
+    }
 }
 
 /**
@@ -357,8 +435,20 @@ export async function getCollectionBooks(req, res){
  * @param {import('express').Response} res 
 */
 export async function getBooksByAgeRange(req, res){
-    //TODO: return books that have age lies on the range in request
-    return res.status(500).json({'message': 'TODO'});
+    //console.log(parseInt(req.params.age1),parseInt(req.params.age2));
+    try{
+        const books = await prisma.books.findMany({
+            where: {
+                age:{
+                    gte:parseInt(req.params.age1),
+                    lte:parseInt(req.params.age2),
+                },
+            }
+        });
+        return res.json(books).status(200);
+    } catch (e) {
+        return res.status(500).json({'message1': e});
+    }
 }
 
 /**
@@ -367,8 +457,19 @@ export async function getBooksByAgeRange(req, res){
  * @param {import('express').Response} res 
 */
 export async function getBooksByPriceRange(req, res){
-    //TODO: return books that have price lies on the range in request
-    return res.status(500).json({'message': 'TODO'});
+    try{
+        const books = await prisma.books.findMany({
+            where: {
+                price:{
+                    gte:parseInt(req.params.price1),
+                    lte:parseInt(req.params.price2),
+                },
+            }
+        });
+        return res.json(books).status(200);
+    } catch (e) {
+        return res.status(500).json({'message1': e});
+    }
 }
 
 /**
@@ -377,8 +478,25 @@ export async function getBooksByPriceRange(req, res){
  * @param {import('express').Response} res 
 */
 export async function getPurchasedBooks(req, res){
-    //TODO: return books that have purchased by current users
-    return res.status(500).json({'message': 'TODO'});
+    if( !req.session || !req.session.user || req.session.user.permission <= 0 ){
+        return res.status(401).json({'message' : 'Login First!'});
+    }
+
+
+    //get all boughtBooks by user_id
+     try{
+        const allBoughtBooks = await prisma.boughtBooks.findMany({
+          where: {
+            users_id: req.session.user.id,
+          },
+          include:{
+            book:true
+          }
+        })
+        return res.json(allBoughtBooks).status(200);
+    }catch (e) {
+        return res.status(500).json({'message1': e});
+    }
 }
 
 
