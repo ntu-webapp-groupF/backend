@@ -62,10 +62,9 @@ export async function createBooks(req, res) {
         return res.status(500).json({'message': 'Not OK at image upload'})
     }
 
-    for(let i = 0;i < response.data.length;i++){
-        const file_inst = response.data[i];
+    response.data.map( async (file_inst) => {
         try{
-            const new_image = await prisma.images.create({
+            await prisma.images.create({
                 data: {
                     books_id: book.id,
                     page: i,
@@ -75,12 +74,25 @@ export async function createBooks(req, res) {
         } catch(e) {
             return res.status(500).json(e);
         }
-    }
+    })
 
-    for(let i = 0;i < req.body['category_names'].length; i++){
-        const category_name = req.body['category_names'][i];
+    if( req.body['category_names'] instanceof Array === true ){
+        req.body['category_names'].map( async (category_name) => {
+            try{
+                await prisma.categorys.create({
+                    data: {
+                        books_id: book.id,
+                        categoryname: category_name, 
+                    }
+                });
+            } catch(e) {
+                return res.status(500).json(e);
+            }
+        })
+    } else {
+        const category_name = req.body['category_names'];
         try{
-            const new_category = await prisma.categorys.create({
+            await prisma.categorys.create({
                 data: {
                     books_id: book.id,
                     categoryname: category_name, 
@@ -91,7 +103,7 @@ export async function createBooks(req, res) {
         }
     }
 
-    const ownership = await prisma.ownerships.create({
+    await prisma.ownerships.create({
         data: {
             users_id: req.session.user.id,
             books_id: book.id
