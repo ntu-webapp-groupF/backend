@@ -19,33 +19,20 @@ export async function getCurrentUser(req, res) {
 		return res.status(401).json({ error: "Please login first" });
 	}
 
-	try {
-		const cache = await redisClient.get(req.session.user.username);
-		if (cache) {
-			return res.status(200).send({
-				fromCache: true,
-				data: JSON.parse(cache),
-			});
-		} else {
-			const user = await prisma.users.findUnique({
-				where: {
-					id: req.session.user.id,
-				}
-			});
-
-			if (!user) {
-				return res.status(500).json({ error: "Internal server error." });
+	try{
+		const user = await prisma.users.findUnique({
+			where: {
+				id: req.session.user.id,
 			}
+		});
 
-			req.session.user = user;
-			const val = exclude(user, ['password']);
-			await redisClient.set(user.username, val);
-
-			return res.status(200).send({
-				fromCache: false,
-				data: val,
-			});
+		if (!user) {
+			return res.status(500).json({ error: "Internal server error." });
 		}
+
+		req.session.user = user;
+		const val = exclude(user, ['password']);
+		return res.status(200).json(val);
 	} catch (e) {
 		console.log(e);
 		return res.status(500).json({ error: e });
@@ -203,7 +190,7 @@ export async function updateHandler(req, res) {
 				}
 				return res.status(200).send(exclude(updated, ['password']));
 			} else {
-				return res.status(401).json("Wrong user password.")
+				return res.status(401).json({error:"Wrong user password."})
 			}
 		} else {
 			const updated = await prisma.users.update({
@@ -242,9 +229,11 @@ export async function addMember(req, res) {
 
 	const userid = parseInt(req.params.id);
 
-	if (userid === req.session.user.id) {
+	/*
+	if (userid !== req.session.user.id) {
 		return res.status(400).json({ error: "Operation failed." });
 	}
+	*/
 
 	try {
 		const member = await prisma.users.update({

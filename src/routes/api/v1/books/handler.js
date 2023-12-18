@@ -6,6 +6,29 @@ import { prisma } from '../../../../adapters.js';
  * @param {import('express').Request} req 
  * @param {import('express').Response} res 
 */
+export async function getBookById(req, res) {
+    try{
+        const book_id = parseInt(req.params.id);
+        const book = await prisma.books.findUnique({
+            where: {
+                id: book_id
+            },
+            include: {
+                category_list: true,
+                images_list: true,
+            }
+        });
+        return res.status(200).json(book);
+    } catch (e) {
+        return res.status(500).json({'message': e});
+    }
+}
+
+/**
+ * 
+ * @param {import('express').Request} req 
+ * @param {import('express').Response} res 
+*/
 export async function createBooks(req, res) {
     // no session, bye bye
     if( !req.session || !req.session.user ){
@@ -62,7 +85,8 @@ export async function createBooks(req, res) {
         return res.status(500).json({'message': 'Not OK at image upload'})
     }
 
-    response.data.map( async (file_inst) => {
+    for(let i =0 ;i < response.data.length; i++){
+        const file_inst = response.data[i];
         try{
             await prisma.images.create({
                 data: {
@@ -72,9 +96,10 @@ export async function createBooks(req, res) {
                 }
             });
         } catch(e) {
+            console.log(e);
             return res.status(500).json(e);
         }
-    })
+    }
 
     if( req.body['category_names'] instanceof Array === true ){
         req.body['category_names'].map( async (category_name) => {
@@ -426,7 +451,7 @@ export async function getCollectionBooks(req, res){
         return res.status(401).json({'message' : 'Login First!'});
     }
     //get all collections by user_id
-    try{
+  
         const allCollections = await prisma.collections.findMany({
           where: {
             users_id: req.session.user.id,
@@ -436,9 +461,7 @@ export async function getCollectionBooks(req, res){
           }
         });
         return res.json(allCollections).status(200);
-    }catch (e) {
-        return res.status(500).json({'message1': e});
-    }
+  
 }
 
 /**
@@ -459,6 +482,7 @@ export async function getBooksByAgeRange(req, res){
         });
         return res.json(books).status(200);
     } catch (e) {
+        console.log(e);
         return res.status(500).json({'message1': e});
     }
 }
@@ -480,6 +504,7 @@ export async function getBooksByPriceRange(req, res){
         });
         return res.json(books).status(200);
     } catch (e) {
+        console.log(e);
         return res.status(500).json({'message1': e});
     }
 }
@@ -496,7 +521,7 @@ export async function getPurchasedBooks(req, res){
 
 
     //get all boughtBooks by user_id
-     try{
+
         const allBoughtBooks = await prisma.boughtBooks.findMany({
           where: {
             users_id: req.session.user.id,
@@ -506,10 +531,31 @@ export async function getPurchasedBooks(req, res){
           }
         })
         return res.json(allBoughtBooks).status(200);
-    }catch (e) {
-        return res.status(500).json({'message1': e});
-    }
+ 
 }
 
+/**
+ * 
+ * @param {import('express').Request} req 
+ * @param {import('express').Response} res 
+*/
+export async function getUploadedBooks(req, res){
+    if( !req.session || !req.session.user ){
+        return res.status(401).json({'message' : 'Login First!'});
+    }
+
+    // get all uploaded books (ownership)
+ 
+        const allUploadedBooks = await prisma.ownerships.findMany({
+          where: {
+            users_id: req.session.user.id,
+          },
+          include:{
+            book:true
+          }
+        })
+        return res.json(allUploadedBooks).status(200);
+  
+}
 
 
