@@ -376,12 +376,15 @@ export async function getRecommendBooks(req, res) {
       orderBy: {
         times: 'desc',
       },
+      include:{
+        category:true
+      }
     })
     // set category_id to 0 if user_id not found in historys
-    var category_id = 1;
+    var category_name = "animal";
     //console.log(findCategorys);
     if(findCategorys.length != 0){
-        category_id = findCategorys[0].categorys_id;
+        category_name = findCategorys[0].category.categoryname;
     }
     //console.log("Category_id:",category_id);
 
@@ -389,11 +392,16 @@ export async function getRecommendBooks(req, res) {
     try{
         const books = await prisma.categorys.findMany({
             where: {
-                id: category_id
+                categoryname: category_name
             },
 
             include: {
-                book: true
+                book:{
+                    include:{
+                        category_list:true,
+                        images_list:true,
+                    }
+                },
             }
 
         });
@@ -447,20 +455,34 @@ export async function getBooksByCategorys(req, res) {
  * @param {import('express').Response} res 
 */
 export async function getCollectionBooks(req, res){
+    console.log("getCollectionBooks");
+
     if( !req.session || !req.session.user || req.session.user.permission <= 0 ){
         return res.status(401).json({'message' : 'Login First!'});
     }
     //get all collections by user_id
-  
+    try{
+        console.log("gettingCollectionBooks");
         const allCollections = await prisma.collections.findMany({
           where: {
             users_id: req.session.user.id,
           },
           include:{
-            book:true
-          }
+            book:{
+                include:{
+                    category_list:true,
+                    images_list:true,
+                }
+            },
+            
+          },
         });
         return res.json(allCollections).status(200);
+    }
+    catch (e) {
+        console.log(e);
+        return res.status(500).json({'message1': e});
+    }
   
 }
 
@@ -515,22 +537,33 @@ export async function getBooksByPriceRange(req, res){
  * @param {import('express').Response} res 
 */
 export async function getPurchasedBooks(req, res){
+    console.log("getPurchasedBooks");
     if( !req.session || !req.session.user || req.session.user.permission <= 0 ){
         return res.status(401).json({'message' : 'Login First!'});
     }
 
 
     //get all boughtBooks by user_id
-
+    try{
+        console.log("gettingPurchasedBooks");
         const allBoughtBooks = await prisma.boughtBooks.findMany({
           where: {
             users_id: req.session.user.id,
           },
           include:{
-            book:true
+            book:{
+                include:{
+                    category_list:true,
+                    images_list:true,
+                }
+            },
           }
         })
         return res.json(allBoughtBooks).status(200);
+    }catch (e) {
+        console.log(e);
+        return res.status(500).json({'message1': e});
+    }
  
 }
 
@@ -545,17 +578,23 @@ export async function getUploadedBooks(req, res){
     }
 
     // get all uploaded books (ownership)
- 
+    try{
         const allUploadedBooks = await prisma.ownerships.findMany({
           where: {
             users_id: req.session.user.id,
           },
           include:{
-            book:true
+            book: {
+                include: {
+                    category_list: true,
+                    images_list: true,
+                }
+            }
           }
         })
         return res.json(allUploadedBooks).status(200);
-  
+    }catch(e){
+        console.log(e);
+        return res.status(500).json({'message1': e});
+    }
 }
-
-
